@@ -5,6 +5,7 @@ from torch import optim
 import torchvision
 from torchvision import transforms
 from torch.utils.data import DataLoader
+from torchsummary import summary
 
 import visdom
 
@@ -41,10 +42,11 @@ def evalue(model, loader):
 
 def main():
     train_model = torchvision.models.resnet18(pretrained=True)
-    # model.fc = nn.Linear(model.fc.in_features, 62)
     model = nn.Sequential(*list(train_model.children())[:-1],
                           Flatten(),
                           nn.Linear(512, 62)).to(device)
+
+
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criteon = nn.CrossEntropyLoss().to(device)
 
