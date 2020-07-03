@@ -7,7 +7,7 @@ from torchvision import transforms
 from PIL import Image
 from matplotlib import pyplot as plt
 import numpy as np
-import visdom
+# import visdom
 import time
 
 all_item = [

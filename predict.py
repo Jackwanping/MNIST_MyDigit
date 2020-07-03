@@ -42,16 +42,25 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
 test = PredictDataset("Predict")
 test_loader = DataLoader(test, batch_size=1, num_workers=2)
 
-model = ResNet18(62)
+model = ResNet18(62).to(device)
 model.load_state_dict(torch.load("save_model/best.ckpt"))
 model.eval()
+
+
+all_item = [
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L','M',' N',
+    'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y' ,' Z',
+    'a' ,'b', 'c' ,'d', 'e', 'f', 'g', 'h', 'i', 'j' ,'k', 'l', 'm','n',
+    'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+]
 
 for img in test_loader:
     img = img.to(device)
     with torch.no_grad():
         logits = model(img)
         pred = logits.argmax(dim=1)
-    print(pred[0].detach().float().cpu().numpy())
+    print(all_item[int(pred[0].detach().float().cpu().numpy())])
 
 
 

@@ -7,7 +7,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from torchsummary import summary
 
-import visdom
+# import visdom
 
 from utils  import Flatten
 from dataloader import MyDataSet
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # model = nn.Sequential(*list(train_model.children())[:-1],
     #                       Flatten(),
     #                       nn.Linear(512, 62)).to(device)
-    model = ResNet18(62)
+    model = ResNet18(62).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criteon = nn.CrossEntropyLoss().to(device)
@@ -78,7 +78,7 @@ if __name__ == '__main__':
                 best_acc = val_acc
                 best_epoch = epoch
 
-        torch.save(model.state_dict(), 'save_model/best.cpkt')
+        torch.save(model.state_dict(), 'save_model/best.ckpt')
 
         print('best-acc', best_acc, 'best-epoch', best_epoch)
 
