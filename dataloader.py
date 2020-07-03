@@ -7,7 +7,7 @@ from torchvision import transforms
 from PIL import Image
 from matplotlib import pyplot as plt
 import numpy as np
-#import visdom
+import visdom
 import time
 
 all_item = [
@@ -81,10 +81,10 @@ if __name__ == '__main__':
 
 
     db = MyDataSet('Img', 224, 'train') # db.__getitem__(0)
-    # viz = visdom.Visdom()
-    x, y = next(iter(db))
-    print('sample:', x.shape, y.shape)
-    print(all_item[int(y.numpy())])
+    vis = visdom.Visdom()
+    # x, y = next(iter(db))
+    # print('sample:', x.shape, y.shape)
+    # print(all_item[int(y.numpy())])
 
     # to_image = transforms.ToPILImage()
     # img = to_image(x)
@@ -94,13 +94,12 @@ if __name__ == '__main__':
     # plt.imshow(to_numpy)
     # plt.show()
 
+    loaders = DataLoader(db, batch_size=16, shuffle=True)
+    for x, y in loaders:
+        vis.images(x, nrow=4, win='batch', opts=dict(title='batch'))
 
-  #  viz.images(x, win='sample-x', opts=dict(title='sample-x'))
-
-    # loaders = DataLoader(db, batch_size=32, shuffle=True)
-   # for x, y in loaders:
-   #     viz.images(x, nrow=8, win='batch', opts=dict(title='batch'))
-    #    viz.text(str(y.numpy()), win='label', opts=dict(title='batch-y'))
-     #   time.sleep(10)
+        str_ = [all_item[int(i.numpy())] for i in y]
+        vis.text(str_, win='label', opts=dict(title='batch-y'))
+        time.sleep(10)
 
 

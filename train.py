@@ -11,6 +11,7 @@ import visdom
 
 from utils  import Flatten
 from dataloader import MyDataSet
+from resnet import *
 
 batch_size = 128
 lr = 1e-3
@@ -40,20 +41,20 @@ def evalue(model, loader):
         correct += torch.eq(pred, y).sum().float().item()
     return correct / total
 
-def main():
-    train_model = torchvision.models.resnet18(pretrained=True)
-    model = nn.Sequential(*list(train_model.children())[:-1],
-                          Flatten(),
-                          nn.Linear(512, 62)).to(device)
-
+if __name__ == '__main__':
+    # train_model = torchvision.models.resnet18(pretrained=True)
+    # model = nn.Sequential(*list(train_model.children())[:-1],
+    #                       Flatten(),
+    #                       nn.Linear(512, 62)).to(device)
+    model = ResNet18(62)
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criteon = nn.CrossEntropyLoss().to(device)
 
-    viz = visdom.Visdom()
+    # viz = visdom.Visdom()
     best_acc, best_epoch = 0, 0
-    viz.line([0], [-1], win='train-loss', opts=dict(title='train-loss'))
-    viz.line([0], [-1], win='val-acc', opts=dict(title='val-acc'))
+    # viz.line([0], [-1], win='train-loss', opts=dict(title='train-loss'))
+    # viz.line([0], [-1], win='val-acc', opts=dict(title='val-acc'))
 
     for epoch in range(epochs):
         for step, (x, y) in enumerate(train_loader):
@@ -66,26 +67,24 @@ def main():
 
             loss.backward()
             optimizer.step()
-        viz.line([loss.item()], [epoch], win='train-loss', update='append')
+        print("train loss:{}".format(loss.item()))
+        # viz.line([loss.item()], [epoch], win='train-loss', update='append')
 
         if epoch % 3 == 0:
             val_acc = evalue(model, val_loader)
-            viz.line([val_acc], [epoch], win='val-acc', update='append')
-
+            print("test acc:{}".format(val_acc))
+            # viz.line([val_acc], [epoch], win='val-acc', update='append')
             if val_acc > best_acc:
                 best_acc = val_acc
                 best_epoch = epoch
 
-                torch.save(model.state_dict(), 'best_gray.mdl')
+        torch.save(model.state_dict(), 'save_model/best.cpkt')
 
         print('best-acc', best_acc, 'best-epoch', best_epoch)
 
-    model.load_state_dict(torch.load('best_gray.mdl'))
+    model.load_state_dict(torch.load('save_model/best.ckpt'))
     print('loaded from best_gray model')
 
 
     test_acc = evalue(model, test_loader)
     print('test-acc', test_acc)
-
-if __name__ == '__main__':
-    main()
