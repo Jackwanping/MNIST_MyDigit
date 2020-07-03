@@ -36,7 +36,7 @@ def main():
     #                       Flatten(),
     #                       nn.Linear(ffc, 62)).to(device)
 
-    model = ResNet18(62)
+    model = ResNet18(62).to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criteon = nn.CrossEntropyLoss().to(device)
 
