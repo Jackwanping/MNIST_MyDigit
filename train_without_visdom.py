@@ -6,6 +6,7 @@ from newdata import MyDataSet, split
 # import visdom
 from utils  import Flatten
 from config import *
+from resnet import *
 
 batch_size = BATCH_SIZE
 lr = LEARNING_RATE
@@ -29,11 +30,13 @@ def evalue(model, loader):
     return correct / total
 
 def main():
-    train_model = torchvision.models.resnet34(pretrained=True)
-    ffc = train_model.fc.in_features
-    model = nn.Sequential(*list(train_model.children())[:-1],
-                          Flatten(),
-                          nn.Linear(ffc, 62)).to(device)
+    # train_model = torchvision.models.resnet34(pretrained=True)
+    # ffc = train_model.fc.in_features
+    # model = nn.Sequential(*list(train_model.children())[:-1],
+    #                       Flatten(),
+    #                       nn.Linear(ffc, 62)).to(device)
+
+    model = ResNet18(62)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criteon = nn.CrossEntropyLoss().to(device)
 
