@@ -5,6 +5,7 @@ import torchvision
 from newdata import MyDataSet, split
 # import visdom
 from utils  import Flatten
+from config import *
 
 batch_size = BATCH_SIZE
 lr = LEARNING_RATE
