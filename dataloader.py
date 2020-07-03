@@ -5,8 +5,9 @@ from torch.utils.data import Dataset, DataLoader
 
 from torchvision import transforms
 from PIL import Image
-
-import visdom
+from matplotlib import pyplot as plt
+import numpy as np
+#import visdom
 import time
 
 all_item = [
@@ -26,15 +27,7 @@ class MyDataSet(Dataset):
         self.root = root
         self.resize = resize
         self.mode = mode
-
-        self.name_to_label = {}
-        for name in sorted(os.listdir(os.path.join(root))):
-            if not os.path.isdir(os.path.join(root, name)):
-                continue
-            self.name_to_label[name] = len(self.name_to_label.keys())
-        # print(self.name_to_label)
-
-        self.images, self.labels = self.load_csv('images.csv')
+        self.images, self.labels = load_csv(root, 'data.csv')
 
         length = len(self.images)
         if mode == 'train':
@@ -46,40 +39,15 @@ class MyDataSet(Dataset):
         else:
             self.images = self.images[int(0.8*length):int(length)]
             self.labels = self.labels[int(0.8*length):int(length)]
-    def load_csv(self, filename):
-        if not os.path.exists(os.path.join(self.root, filename)):
-            images = []
-            for name in self.name_to_label.keys():
-                images += glob.glob(os.path.join(self.root, name, '*.png'))
-            print(len(images), images)
-
-            random.shuffle(images)
-            with open(os.path.join(self.root, filename), 'w', newline='') as f:
-                writer = csv.writer(f)
-                for img in images:
-                    name = img.split(os.sep)[-2] # 得到所在的目录
-                    label = self.name_to_label[name] # 得到目录对应的标签
-                    writer.writerow([img, label]) # 图片路径对应的标签
-        images, labels = [], []
-        with open(os.path.join(self.root, filename), 'r') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                img, label = row
-                label = int(label)
-
-                images.append(img)
-                labels.append(label)
-        return images,labels
-
 
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, item):
         img, label = self.images[item], self.labels[item]
+        
         transform = transforms.Compose([
-            # lambda x:Image.open(x).convert('RGB'),
-            lambda x:Image.open(x),
+            lambda x:Image.open(x).convert('RGB'),
             transforms.Resize((int(self.resize*1.25), int(self.resize*1.25))),
             transforms.RandomRotation(15),
             transforms.CenterCrop(self.resize),
@@ -89,21 +57,50 @@ class MyDataSet(Dataset):
         label = torch.tensor(label)
         return img, label
 
+def load_csv(root, filename):
+    name_to_label = {} # dirname : label
+    for name in sorted(os.listdir(os.path.join(root)), key=lambda x: int(x[-3:])):
+        name_to_label[name] = len(name_to_label.keys())
 
-def main():
-    db = MyDataSet('Img', 224, 'train')
-    viz = visdom.Visdom()
+    images, labels = [], []
+
+    for name in name_to_label.keys():
+        images += glob.glob(os.path.join(root, name, '*.png'))
+    random.shuffle(images)
+
+    for img in images:
+        name = img.split(os.sep)[-2] # 得到所在的目录
+        label = name_to_label[name] # 得到目录对应的标签
+        labels.append(label)
+    return images,labels
+
+if __name__ == '__main__':
+    images, labels = load_csv("Img", "data.csv")
+    if len(images) != len(labels):
+        assert "图片数量不等于标签数量"
+
+
+    db = MyDataSet('Img', 224, 'train') # db.__getitem__(0)
+    # viz = visdom.Visdom()
     x, y = next(iter(db))
     print('sample:', x.shape, y.shape)
-
     print(all_item[int(y.numpy())])
-    viz.images(x, win='sample-x', opts=dict(title='sample-x'))
 
-    loaders = DataLoader(db, batch_size=32, shuffle=True)
-    for x, y in loaders:
-        viz.images(x, nrow=8, win='batch', opts=dict(title='batch'))
-        viz.text(str(y.numpy()), win='label', opts=dict(title='batch-y'))
-        time.sleep(10)
-if __name__ == '__main__':
-    main()
+    # to_image = transforms.ToPILImage()
+    # img = to_image(x)
+    # img.show()
+
+    # to_numpy = np.transpose(x.detach().float().numpy(), (1, 2, 0))
+    # plt.imshow(to_numpy)
+    # plt.show()
+
+
+  #  viz.images(x, win='sample-x', opts=dict(title='sample-x'))
+
+    # loaders = DataLoader(db, batch_size=32, shuffle=True)
+   # for x, y in loaders:
+   #     viz.images(x, nrow=8, win='batch', opts=dict(title='batch'))
+    #    viz.text(str(y.numpy()), win='label', opts=dict(title='batch-y'))
+     #   time.sleep(10)
+
 
